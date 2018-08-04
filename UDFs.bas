@@ -287,7 +287,7 @@ Attribute ConvertAssignments.VB_ProcData.VB_Invoke_Func = " \n14"
     CloseAdobe
     
     ' Provide feedback that the operation was succesful
-    MsgBox "Assignments have succesfully been prepared!"
+    MsgBox "Toewijzingen zijn succesvol aangemaakt!"
     
 End Sub
 

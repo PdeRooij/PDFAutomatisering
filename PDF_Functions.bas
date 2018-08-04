@@ -34,12 +34,13 @@ End Sub
 ''=======================================================
 Sub OpenAdobe(ByVal strTemplLoc As String)
     ' Open PDF document
-    If gAcrobatAVDoc.Open(strTemplLoc, "") Then
+    If gAcrobatAVDoc.Open(strTemplLoc, "Toewijzingen") Then
         ' Succesfully opened
         Set gAcrobatPDDoc = gAcrobatAVDoc.GetPDDoc() ' Also store PDDoc
         
         ' With the PDDoc, it is now also possible to initialize the JScript bridge
         Set g_jso = gAcrobatPDDoc.GetJSObject
+        g_intPageNum = 0                        ' Start spawning from page 0 onwards
         
         ' Show Acrobat window
         gAcrobatApplication.Show
@@ -50,24 +51,24 @@ End Sub
 ''=======================================================
 '' Program:     SpawnAssignments
 '' Desc:        Spawns an extra page of assignments from the template.
-'' Called by:   ConvertAssignments
-'' Call:        SpawnAssignments([PageNumber])
-'' Arguments:   PageNumber  - (Optional) Page number at which the template is spawned
+'' Called by:   ConvertAssignments, WriteAssignment
+'' Call:        SpawnAssignments
+'' Arguments:   None
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 13-6-18      Pieter de Rooij     Formed the stub
 '' 7-7-18       Pieter de Rooij     Proof of concept of using JScript to spawn
 '' 3-8-18       Pieter de Rooij     Now using public variables
+'' 4-8-18       Pieter de Rooij     Now spawns on consecutive pages instead of duplication on the first page
 ''=======================================================
-Sub SpawnAssignments(Optional ByVal p_intPageNum As Integer)
+Sub SpawnAssignments()
     ' Find template and spawn it
-'    gAcrobatApplication.Show
     Dim Template As Object
     Dim spawn As Object
     Set Template = g_jso.GetTemplate("Toewijzingen")
-    Set spawn = Template.spawn(0, True, False)
-'   gAcrobatPDDoc.OpenAVDoc ("")
+    Set spawn = Template.spawn(g_intPageNum, True, False)
+    g_intPageNum = g_intPageNum + 1     ' Increment page number
     
 End Sub
 
@@ -86,9 +87,16 @@ End Sub
 ''              Assumes that specific assignment is already (made) available!
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 13-6-18      Pieter de Rooij     Formed the stub
+'' 13-06-2018   Pieter de Rooij     Formed the stub
+'' 04-08-2018   Pieter de Rooij     Spawn a new page if more assignments are required
 ''=======================================================
 Function WriteAssignment(ByVal Name As String, ByVal AsDate As Date, ByVal AsType As String, Optional ByVal CounselPoint As Integer = 0, Optional ByVal Assistant As String = "", Optional ByVal Concerns As Integer = 0) As Boolean
+    ' Next assignment is being written, increment counter
+    g_intAsCount = g_intAsCount + 1
+    ' Spawn a new page with assignments if needed
+    If g_intPageNum * 4 < g_intAsCount Then
+        SpawnAssignments
+    End If
     
     ' Call function to fill fields
     

@@ -13,6 +13,7 @@ Public gAFormApp As Object
 Public g_jso As Object                          ' JScript bridge
 
 ' Variables for conversion into assignments
+Public g_intPageNum As Integer  ' Number of the current page (start=0)
 Public g_intAsCount As Integer  ' Counter for the current assignment
 Public g_intRow As Integer      ' Row being read
 Public g_intCol As Integer      ' Column under consideration
