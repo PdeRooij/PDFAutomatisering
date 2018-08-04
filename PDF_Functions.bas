@@ -4,7 +4,6 @@ Option Explicit
 ''=======================================================
 '' Program:     InitializeAdobe
 '' Desc:        Initializes Adobe modules and creates public variables for reference.
-''              Also attempts to open the assingments template.
 '' Called by:   ConvertAssignments
 '' Call:        InitializeAdobe
 '' Arguments:   None
@@ -12,32 +11,39 @@ Option Explicit
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 13-6-18      Pieter de Rooij     Formed the stub
+'' 3-8-18       Pieter de Rooij     Simplified to pure initialisation
 ''=======================================================
 Sub InitializeAdobe()
-    ' Initialize Adobe modules
-    Public AcrobatApplication As Acrobat.CAcroApp
-    Public AcrobatAVDoc As Acrobat.CAcroAVDoc
-    Public AcrobatPDDoc As Acrobat.CAcroPDDoc
-    Dim fcount As Long
-    Dim sFieldName As String
+    'Initialize app, AVDoc and FormApp
+    Set gAcrobatApplication = CreateObject("AcroExch.App")
+    Set gAcrobatAVDoc = CreateObject("AcroExch.AVDoc")
+    Set gAFormApp = CreateObject("AFormAut.App")
     
-    Set AcrobatApplication = CreateObject("AcroExch.App")
-    Set AcrobatAVDoc = CreateObject("AcroExch.AVDoc")
-    Set AcrobatPDDoc = AcrobatAVDoc.GetPDDoc()
-    
-    '-------------------
-    Dim AcroApp As Acrobat.CAcroApp
+End Sub
 
-    Dim Part1Document As Acrobat.CAcroPDDoc
-
-    Dim numPages As Integer
-
-    Set AcroApp = CreateObject("AcroExch.App")
-
-    Set Part1Document = CreateObject("AcroExch.PDDoc")
-
-    Part1Document.Open ("C:\temp\Part1.pdf")
-
+''=======================================================
+'' Program:     OpenAdobe
+'' Desc:        Opens the PDF template in Adobe specified by the user.
+'' Called by:   ConvertAssignments
+'' Call:        OpenAdobe strTemplLoc:=TemplateLocation
+'' Arguments:   TemplateLocation    - String of the template's path
+'' Comments:    None
+'' Changes----------------------------------------------
+'' Date         Programmer          Change
+'' 3-8-18       Pieter de Rooij     Opens PDF template after initialisation
+''=======================================================
+Sub OpenAdobe(ByVal strTemplLoc As String)
+    ' Open PDF document
+    If gAcrobatAVDoc.Open(strTemplLoc, "") Then
+        ' Succesfully opened
+        Set gAcrobatPDDoc = gAcrobatAVDoc.GetPDDoc() ' Also store PDDoc
+        
+        ' With the PDDoc, it is now also possible to initialize the JScript bridge
+        Set g_jso = gAcrobatPDDoc.GetJSObject
+        
+        ' Show Acrobat window
+        gAcrobatApplication.Show
+    End If
     
 End Sub
 
@@ -45,39 +51,23 @@ End Sub
 '' Program:     SpawnAssignments
 '' Desc:        Spawns an extra page of assignments from the template.
 '' Called by:   ConvertAssignments
-'' Call:        SpawnAssignments(PageNumber)
-'' Arguments:   PageNumber  - Number of the page at which the template is spawned
+'' Call:        SpawnAssignments([PageNumber])
+'' Arguments:   PageNumber  - (Optional) Page number at which the template is spawned
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 13-6-18      Pieter de Rooij     Formed the stub
 '' 7-7-18       Pieter de Rooij     Proof of concept of using JScript to spawn
+'' 3-8-18       Pieter de Rooij     Now using public variables
 ''=======================================================
-Sub SpawnAssignments(ByVal p_intPageNum As Integer)
-    
-    ' Open Acrobat objects, to be replaced by initialization
-    Dim gApp As Acrobat.CAcroApp
-    Dim gPDDoc As Acrobat.CAcroPDDoc
-    Dim jso As Object
-    
-    Set gApp = CreateObject("AcroExch.App")
-    Set gPDDoc = CreateObject("AcroExch.PDDoc")
-    If gPDDoc.Open("C:\Users\Pieter\Google Drive\JW\Schema's\LTV\Toewijzingen template.pdf") Then
-        ' Find template and spawn it
-        gApp.Show
-        Dim Template As Object
-        Dim spawn As Object
-        Set jso = gPDDoc.GetJSObject
-        Set Template = jso.GetTemplate("Toewijzingen")
-        Set spawn = Template.spawn(0, True, False)
-        gPDDoc.OpenAVDoc ("")
-    End If
-    
-    ' Neatly exit
-    gApp.Exit
-    Set gApp = Nothing
-    Set gPDDoc = Nothing
-    ' Call Javascript to spawn a page from template?
+Sub SpawnAssignments(Optional ByVal p_intPageNum As Integer)
+    ' Find template and spawn it
+'    gAcrobatApplication.Show
+    Dim Template As Object
+    Dim spawn As Object
+    Set Template = g_jso.GetTemplate("Toewijzingen")
+    Set spawn = Template.spawn(0, True, False)
+'   gAcrobatPDDoc.OpenAVDoc ("")
     
 End Sub
 
@@ -151,6 +141,28 @@ Sub WriteAdobeField()
 End Sub
 
 ''=======================================================
+'' Program:     SaveAdobe
+'' Desc:        Saves the current document to a specified location.
+'' Called by:   ConvertAssignments
+'' Call:        SaveAdobe(FileLocation)
+'' Arguments:   FileLocation    - String where the PDF should be saved
+'' Comments:    None
+'' Changes----------------------------------------------
+'' Date         Programmer          Change
+'' 4-8-18       Pieter de Rooij     Formed the stub
+''=======================================================
+Function SaveAdobe(ByVal strFLoc As String)
+    
+    ' Try to save to specified file
+    If gAcrobatPDDoc.Save(PDSaveFull, strFLoc) = False Then
+        SaveAdobe = False
+    Else
+        SaveAdobe = True
+    End If
+    
+End Function
+
+''=======================================================
 '' Program:     CloseAdobe
 '' Desc:        Closes Adobe modules after use.
 '' Called by:   ConvertAssignments
@@ -160,26 +172,17 @@ End Sub
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 13-6-18      Pieter de Rooij     Formed the stub
+'' 3-8-18       Pieter de Rooij     Simplified for pure closing
 ''=======================================================
 Sub CloseAdobe()
     ' Neatly exit Adobe modules
-    AcrobatApplication.Exit
-    Set AcrobatApplication = Nothing
-    Set AcrobatDocument = Nothing
-    Set Field = Nothing
-    Set Fields = Nothing
-    Set AcroForm = Nothing
+    gAcrobatApplication.Exit
+    Set gAcrobatApplication = Nothing
+    Set gAcrobatAVDoc = Nothing
+    Set gAcrobatPDDoc = Nothing
+    Set g_jso = Nothing
+'    Set Field = Nothing
+'    Set Fields = Nothing
+    Set gAFormApp = Nothing
     
-    '---------------
-    If Part1Document.Save(PDSaveFull, "C:\temp\MergedFile.pdf") = False Then
-        MsgBox "Cannot save the modified document"
-    End If
-
-    Part1Document.Close
-    Part2Document.Close
-
-    AcroApp.Exit
-    Set AcroApp = Nothing
-    Set Part1Document = Nothing
-    Set Part2Document = Nothing
 End Sub
