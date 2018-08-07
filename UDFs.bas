@@ -10,8 +10,8 @@ Option Explicit
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 14-7-18      Pieter de Rooij     Dynamically adds a week to the sheet
-'' 23-7-18      Pieter de Rooij     Functionality to undo this macro
+'' 14-07-2018   Pieter de Rooij     Dynamically adds a week to the sheet
+'' 23-07-2018   Pieter de Rooij     Functionality to undo this macro
 ''=======================================================
 Sub AddWeek()
 Attribute AddWeek.VB_Description = "Adds a week to fill in into the template."
@@ -61,7 +61,7 @@ End Sub
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 23-7-18      Pieter de Rooij     Initial implementation
+'' 23-07-2018   Pieter de Rooij     Initial implementation
 ''=======================================================
 Sub UndoAddWeek()
 Attribute UndoAddWeek.VB_Description = "Undoes the add week macro."
@@ -105,7 +105,7 @@ End Sub
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 24-5-18      Pieter de Rooij     Copied from the web
+'' 24-05-2018   Pieter de Rooij     Copied from the web
 ''=======================================================
 Sub MergePDFs()
 Attribute MergePDFs.VB_Description = "Puts two PDFs one after the other."
@@ -157,7 +157,7 @@ End Sub
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 24-5-18      Pieter de Rooij     Copied from the web
+'' 24-05-2018   Pieter de Rooij     Copied from the web
 ''=======================================================
 Sub ReadAdobeFields()
 Attribute ReadAdobeFields.VB_Description = "Reads the fields present in an open document and lists their name, value and (optionally) type."
@@ -213,7 +213,7 @@ End Sub
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 24-5-18      Pieter de Rooij     Copied from the web
+'' 24-05-2018   Pieter de Rooij     Copied from the web
 ''=======================================================
 Sub WriteToAdobeFields()
 Attribute WriteToAdobeFields.VB_Description = "Writes desired values to specified fields in an open document."
@@ -258,8 +258,8 @@ End Sub
 '' Comments:    This is the main function of automation.
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 13-6-18      Pieter de Rooij     Formed the stub
-'' 4-8-18       Pieter de Rooij     Elaborated to demonstrate template spawning
+'' 13-06-2018   Pieter de Rooij     Formed the stub
+'' 04-08-2018   Pieter de Rooij     Elaborated to demonstrate template spawning
 ''=======================================================
 Sub ConvertAssignments()
 Attribute ConvertAssignments.VB_Description = "Converts the filled in weeks into assignments."
@@ -304,7 +304,7 @@ End Sub
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 3-8-18       Pieter de Rooij     Initial version
+'' 03-08-2018   Pieter de Rooij     Initial version
 ''=======================================================
 Function AskUser(ByVal strTitle As String, Optional ByVal strType As String = "Open", Optional ByVal bMulti As Boolean = False)
     Dim fdDialog As FileDialog  ' Variable holding the dialog
@@ -353,15 +353,43 @@ End Function
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 4-8-18       Pieter de Rooij     Formed the stub (just increment row)
+'' 04-08-2018   Pieter de Rooij     Formed the stub (just increment row)
+'' 07-08-2018   Pieter de Rooij     Actually reads a week
 ''=======================================================
 Sub ConvertWeek()
-    ' Increment row by 3
-    g_intRow = g_intRow + 3
+    ' Check whether the current row contains something to read
+    If LCase(ActiveSheet.Cells(g_intRow, 1).Value) = "datum" Then
+        ' Header row found, read week
+        Dim dDate As Date   ' Stores this week's date
+        If Not IsDate(ActiveSheet.Cells(g_intRow + 1, 1).Value) Then
+            ' No date found, ask the user what to do
+            Dim bUserAns As Boolean
+            bUserAns = MsgBox("No date found at A" & g_intRow + 1 & "! Skip week (No to abort)?", vbYesNo + vbQuestion, "Convert week")
+            If bUserAns Then
+                ' User is fine with skipping week, so go to next row
+                g_intRow = g_intRow + 1
+            End If
+            ' Function can be ended, no matter what the user selected
+            Exit Function
+        End If
+        
+        ' Store date and convert every row
+        dDate = ActiveSheet.Cells(g_intRow + 1, 1).Value
+        ' Every week consists of four rows (types of assignments), convert each of them
+        Dim idx As Integer  ' Loop index
+        For idx = 1 To 4
+            ConvertRow dDate, g_intRow + idx
+        Next idx
+        
+        ' Lastly advance 7 rows, because that is where the next week ought to start
+        g_intRow = g_intRow + 7
+        
+    Else
+        ' Just go to the next row
+        g_intRow = g_intRow + 1
+    End If
     
-    ' Found date, store and read all information on that date.
-    
-    ' Write assignment
+    ' #Falls back to ConvertAssignments which in turn calls this function for coming rows #
     
 End Sub
 
@@ -374,17 +402,25 @@ End Sub
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
-'' 4-8-18       Pieter de Rooij     Formed the stub
+'' 04-08-2018   Pieter de Rooij     Formed the stub
+'' 07-08-2018   Pieter de Rooij     Actually reads a row
 ''=======================================================
-Sub ConvertRow(ByVal dAsDate As Date)
+Sub ConvertRow(ByVal dAsDate As Date, ByVal intRRow As Integer)
+    ' Store table row in variable
+    Dim rRow As Range
+    Set rRow = ActiveSheet.Range(Cells(intRRow, 1), Cells(intRRow, 5))
+    
     ' Determine whether or not and how many assignments are required
-    
-    ' If there is an assistant, two assignments have to be written
-    
-    ' If it is just a discussion of a presentation, no assignment is required
-    
-    ' Otherwise one assignment is sufficient
-    
-    ' Write assignment
+    If Not IsEmpty(ActiveSheet.Cells(intRRow, 4).Value) Then
+        ' If there is an assistant, two assignments have to be written
+        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 0  ' Student
+        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 1  ' Assistant
+    ElseIf InStr(LCase(ActiveSheet.Cells(intRRow, 2).Value), "filmpje") > 0 Then
+        ' If it is just a discussion of a presentation, no assignment is required
+        Exit Sub
+    Else
+        ' Otherwise one assignment is sufficient
+        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value
+    End If
     
 End Sub
