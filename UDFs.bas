@@ -358,7 +358,7 @@ End Function
 ''=======================================================
 Sub ConvertWeek()
     ' Check whether the current row contains something to read
-    If LCase(ActiveSheet.Cells(g_intRow, 1).Value) = "datum" Then
+    If InStr(LCase(ActiveSheet.Cells(g_intRow, 1).Value), "datum") > 0 Then
         ' Header row found, read week
         Dim dDate As Date   ' Stores this week's date
         If Not IsDate(ActiveSheet.Cells(g_intRow + 1, 1).Value) Then
@@ -415,8 +415,8 @@ Sub ConvertRow(ByVal dAsDate As Date, ByVal intRRow As Integer)
         ' If there is an assistant, two assignments have to be written
         WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 0  ' Student
         WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 1  ' Assistant
-    ElseIf InStr(LCase(ActiveSheet.Cells(intRRow, 2).Value), "filmpje") > 0 Then
-        ' If it is just a discussion of a presentation, no assignment is required
+    ElseIf IsEmpty(ActiveSheet.Cells(intRRow, 5).Value) Then
+        ' If it is just a discussion of a presentation (no counsel), no assignment is required
         Exit Sub
     Else
         ' Otherwise one assignment is sufficient
