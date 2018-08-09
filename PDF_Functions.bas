@@ -12,17 +12,16 @@ Option Explicit
 '' Date         Programmer          Change
 '' 13-06-2018   Pieter de Rooij     Formed the stub
 '' 03-08-2018   Pieter de Rooij     Simplified to pure initialisation
+'' 09-08-2018   Pieter de Rooij     Removed form references
 ''=======================================================
 Sub InitializeAdobe()
     ' Initialize app, AVDoc and FormApp
     Set gAcrobatApplication = CreateObject("AcroExch.App")
     Set gAcrobatAVDoc = CreateObject("AcroExch.AVDoc")
-    Set gAFormApp = CreateObject("AFormAut.App")
     
     ' Initialize global variables
     g_intPageNum = 0                ' Start spawning from page 0 onwards
     g_intAsCount = 0                ' Start with assignment 0
-    g_lColour = RGB(255, 255, 0)    ' Set fill colour to yellow
     
 End Sub
 
@@ -36,15 +35,13 @@ End Sub
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 03-08-2018   Pieter de Rooij     Opens PDF template after initialisation
+'' 09-08-2018   Pieter de Rooij     Removed form references
 ''=======================================================
 Sub OpenAdobe(ByVal strTemplLoc As String)
     ' Open PDF document
     If gAcrobatAVDoc.Open(strTemplLoc, "Toewijzingen") Then
         ' Succesfully opened
         Set gAcrobatPDDoc = gAcrobatAVDoc.GetPDDoc() ' Also store PDDoc
-        
-        ' Reference fields
-        Set g_fields = gAFormApp.Fields
         
         ' With the PDDoc, it is now also possible to initialize the JScript bridge
         Set g_jso = gAcrobatPDDoc.GetJSObject
@@ -125,13 +122,13 @@ Sub WriteAssignment(ByVal strName As String, ByVal dAsDate As Date, ByVal strAsT
         WriteAdobeField strPreFName & "CounselPoint" & intSufFName, intCounselPoint
     ElseIf intConcerns = 1 Then
         ' Assignment for the assignee, highlight name, fill assistant and counsel point
-        WriteAdobeField strPreFName & "Name" & intSufFName, strName, g_lColour
+        WriteAdobeField strPreFName & "Name" & intSufFName, strName, True
         WriteAdobeField strPreFName & "Assistant" & intSufFName, strAssistant
         WriteAdobeField strPreFName & "CounselPoint" & intSufFName, intCounselPoint
     Else    ' intConcerns = 2
         ' Assignment for the assistant, fill name and highlight assistant (no counsel point)
         WriteAdobeField strPreFName & "Name" & intSufFName, strName
-        WriteAdobeField strPreFName & "Assistant" & intSufFName, strAssistant, g_lColour
+        WriteAdobeField strPreFName & "Assistant" & intSufFName, strAssistant, True
     End If
     
     ' Lastly, put a tick before the corresponding assignment type
@@ -143,25 +140,24 @@ End Sub
 '' Program:     WriteAdobeField
 '' Desc:        Writes a given value to a specified field in a PDF document.
 '' Called by:   WriteAssignment
-'' Call:        WriteAdobeField(Field, Value, [FillColour])
-'' Arguments:   Field       - Name of the field to write to
-''              Value       - Value to write into that field
-''              FillColour  - (Optional) What colour to fill specified field with
+'' Call:        WriteAdobeField(Field, Value, [Fill])
+'' Arguments:   Field   - Name of the field to write to
+''              Value   - Value to write into that field
+''              Fill    - (Optional) Whether or not the field needs to be filled with a colour
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 13-06-2018   Pieter de Rooij     Formed the stub
 '' 08-08-2018   Pieter de Rooij     Dynamically writes adobe fields based on input
+'' 09-08-2018   Pieter de Rooij     Switched to using JScript bridge and colour is now defined here
 ''=======================================================
-Sub WriteAdobeField(ByVal strField As String, ByVal strVal As String, Optional ByVal lCol As Long = -1)
+Sub WriteAdobeField(ByVal strField As String, ByVal strVal As String, Optional ByVal bFill As Boolean = False)
     ' Write specified value to specified field
-    g_fields("Date0").Value = strVal
-    g_fields(strField).Value = strVal
+    g_jso.getField(strField).Value = strVal
     
-    If lCol > -1 Then
+    If bFill Then
         ' Also fill if colour is given
-        g_fields(strField).SetBackgroundColor "RGB", _
-        (lCol Mod 256) / 255, (lCol \ 256 Mod 256) / 255, (lCol \ 65536 Mod 256) / 255, 0#
+        g_jso.getField(strField).fillColor = g_jso.Color.yellow     ' Fill with yellow
     End If
     
 '    Dim AcrobatApplication As Acrobat.CAcroApp
@@ -198,6 +194,7 @@ End Sub
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 08-08-2018   Pieter de Rooij     Initial version
+'' 09-08-2018   Pieter de Rooij     Switched to using the JScript bridge
 ''=======================================================
 Sub TickType(ByVal strPre As String, ByVal strSuf As String, ByVal strDutchType As String)
     ' Translate Dutch type into English counterpart
@@ -225,7 +222,7 @@ Sub TickType(ByVal strPre As String, ByVal strSuf As String, ByVal strDutchType 
     End Select
     
     ' Tick field
-    g_fields(strPre & strEngType & strSuf).Value = "Yes"
+    g_jso.getField(strPre & strEngType & strSuf).checkThisBox 0, True
     
 End Sub
 
@@ -261,6 +258,7 @@ End Function
 '' Date         Programmer          Change
 '' 13-06-2018   Pieter de Rooij     Formed the stub
 '' 03-08-2018   Pieter de Rooij     Simplified for pure closing
+'' 09-08-2018   Pieter de Rooij     Removed form references
 ''=======================================================
 Sub CloseAdobe()
     ' Neatly exit Adobe modules
@@ -269,7 +267,5 @@ Sub CloseAdobe()
     Set gAcrobatAVDoc = Nothing
     Set gAcrobatPDDoc = Nothing
     Set g_jso = Nothing
-    Set g_fields = Nothing
-    Set gAFormApp = Nothing
     
 End Sub
