@@ -279,10 +279,6 @@ Attribute ConvertAssignments.VB_ProcData.VB_Invoke_Func = " \n14"
         ConvertWeek
     Wend
     
-    ' Spawn two pages from template for testing purposes
-    SpawnAssignments
-    SpawnAssignments
-    
     ' Close Adobe modules again
     CloseAdobe
     
@@ -370,7 +366,7 @@ Sub ConvertWeek()
                 g_intRow = g_intRow + 1
             End If
             ' Function can be ended, no matter what the user selected
-            Exit Function
+            Exit Sub
         End If
         
         ' Store date and convert every row
@@ -413,8 +409,8 @@ Sub ConvertRow(ByVal dAsDate As Date, ByVal intRRow As Integer)
     ' Determine whether or not and how many assignments are required
     If Not IsEmpty(ActiveSheet.Cells(intRRow, 4).Value) Then
         ' If there is an assistant, two assignments have to be written
-        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 0  ' Student
-        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 1  ' Assistant
+        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 1  ' Student
+        WriteAssignment rRow.Cells(1, 3).Value, dAsDate, rRow.Cells(1, 2).Value, rRow.Cells(1, 5).Value, rRow.Cells(1, 4).Value, 2  ' Assistant
     ElseIf IsEmpty(ActiveSheet.Cells(intRRow, 5).Value) Then
         ' If it is just a discussion of a presentation (no counsel), no assignment is required
         Exit Sub
