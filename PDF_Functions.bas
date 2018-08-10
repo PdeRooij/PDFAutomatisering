@@ -160,28 +160,6 @@ Sub WriteAdobeField(ByVal strField As String, ByVal strVal As String, Optional B
         g_jso.getField(strField).fillColor = g_jso.Color.yellow     ' Fill with yellow
     End If
     
-'    Dim AcrobatApplication As Acrobat.CAcroApp
-'    Dim AcrobatDocument As Acrobat.CAcroAVDoc
-'    Dim fcount As Long
-'    Dim sFieldName As String
-'
-'    Set AcrobatApplication = CreateObject("AcroExch.App")
-'    Set AcrobatDocument = CreateObject("AcroExch.AVDoc")
-'
-'    If AcrobatDocument.Open("D:\Zaal\LTV\Toewijzingen formulier.pdf", "") Then
-'        AcrobatApplication.Show
-'        Set AcroForm = CreateObject("AFormAut.App")
-'        Set Fields = AcroForm.Fields
-'        fcount = Fields.Count
-'
-'        Fields("Name0").Value = "Test"
-'        Fields("Name1").Value = "Test2"
-'        Fields("Name2").Value = "Test3"
-'        Fields("Name3").Value = "Test4"
-'    Else
-'        MsgBox "Failed to write field!"
-'    End If
-    
 End Sub
 
 ''=======================================================
@@ -258,14 +236,17 @@ End Function
 '' Date         Programmer          Change
 '' 13-06-2018   Pieter de Rooij     Formed the stub
 '' 03-08-2018   Pieter de Rooij     Simplified for pure closing
-'' 09-08-2018   Pieter de Rooij     Removed form references
+'' 09-08-2018   Pieter de Rooij     Removed form references and made closing even cleaner
 ''=======================================================
 Sub CloseAdobe()
-    ' Neatly exit Adobe modules
+    ' Delete references to Adobe modules
+    Set g_jso = Nothing
+    Set gAcrobatPDDoc = Nothing
+    Set gAcrobatAVDoc = Nothing
+    
+    ' Close application
+    gAcrobatApplication.CloseAllDocs
     gAcrobatApplication.Exit
     Set gAcrobatApplication = Nothing
-    Set gAcrobatAVDoc = Nothing
-    Set gAcrobatPDDoc = Nothing
-    Set g_jso = Nothing
     
 End Sub

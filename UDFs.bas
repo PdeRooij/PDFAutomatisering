@@ -97,159 +97,6 @@ Problem:
 End Sub
 
 ''=======================================================
-'' Program:     MergePDFs
-'' Desc:        Merges two PDFs one after the other.
-'' Called by:   Directly
-'' Call:        MergePDFs
-'' Arguments:   None
-'' Comments:    None
-'' Changes----------------------------------------------
-'' Date         Programmer          Change
-'' 24-05-2018   Pieter de Rooij     Copied from the web
-''=======================================================
-Sub MergePDFs()
-Attribute MergePDFs.VB_Description = "Puts two PDFs one after the other."
-    
-    Dim AcroApp As Acrobat.CAcroApp
-
-    Dim Part1Document As Acrobat.CAcroPDDoc
-    Dim Part2Document As Acrobat.CAcroPDDoc
-
-    Dim numPages As Integer
-
-    Set AcroApp = CreateObject("AcroExch.App")
-
-    Set Part1Document = CreateObject("AcroExch.PDDoc")
-    Set Part2Document = CreateObject("AcroExch.PDDoc")
-
-    Part1Document.Open ("C:\temp\Part1.pdf")
-    Part2Document.Open ("C:\temp\Part2.pdf")
-
-    ' Insert the pages of Part2 after the end of Part1
-    numPages = Part1Document.GetNumPages()
-
-    If Part1Document.InsertPages(numPages - 1, Part2Document, 0, Part2Document.GetNumPages(), True) = False Then
-        MsgBox "Cannot insert pages"
-    End If
-
-    If Part1Document.Save(PDSaveFull, "C:\temp\MergedFile.pdf") = False Then
-        MsgBox "Cannot save the modified document"
-    End If
-
-    Part1Document.Close
-    Part2Document.Close
-
-    AcroApp.Exit
-    Set AcroApp = Nothing
-    Set Part1Document = Nothing
-    Set Part2Document = Nothing
-
-    MsgBox "Done"
-    
-End Sub
-
-''=======================================================
-'' Program:     ReadAdobeFields
-'' Desc:        Reads fields present in a specified PDF document and writes these in the active worksheet.
-'' Called by:   Directly
-'' Call:        ReadAdobeFields
-'' Arguments:   None
-'' Comments:    None
-'' Changes----------------------------------------------
-'' Date         Programmer          Change
-'' 24-05-2018   Pieter de Rooij     Copied from the web
-''=======================================================
-Sub ReadAdobeFields()
-Attribute ReadAdobeFields.VB_Description = "Reads the fields present in an open document and lists their name, value and (optionally) type."
-    ' Read Fields present in an open PDF document.
-    ' Displays field names, values and optionally types in the active sheet.
-    row_number = 1
-    
-    Dim AcrobatApplications As Acrobat.CAcroApp
-    Dim AcrobatDocument As Acrobat.CAcroAVDoc
-    Dim fcount As Long
-    Dim sFieldName As String
-    
-    On Error Resume Next
-    Set AcrobatApplication = CreateObject("AcroExch.App")
-    Set AcrobatDocument = CreateObject("AcroExch.AVDoc")
-    
-    If AcrobatDocument.Open("D:\Zaal\LTV\Toewijzingen formulier.pdf", "") Then
-        AcrobatApplication.Show
-        Set AcroForm = CreateObject("AFormAut.App")
-        Set Fields = AcroForm.Fields
-        fcount = Fields.Count ' Number of Fields
-        
-            For Each Field In Fields
-            row_number = row_number + 1
-                sFieldName = Field.Name
-                ' MsgBox sFieldName
-                
-                Sheet1.Range("B" & row_number) = Field.Name
-                Sheet1.Range("C" & row_number) = Field.Value
-                Sheet1.Range("D" & row_number) = Field.Style
-        
-        Next Field
-    Else
-        MsgBox "Failure"
-    End If
-    
-    ' Neatly exit
-    AcrobatApplication.Exit
-    Set AcrobatApplication = Nothing
-    Set AcrobatDocument = Nothing
-    Set Field = Nothing
-    Set Fields = Nothing
-    Set AcroForm = Nothing
-    
-End Sub
-
-''=======================================================
-'' Program:     WriteToAdobeFields
-'' Desc:        Writes given values to specified fields in a PDF document.
-'' Called by:   Directly
-'' Call:        WriteToAdobeFields
-'' Arguments:   None
-'' Comments:    None
-'' Changes----------------------------------------------
-'' Date         Programmer          Change
-'' 24-05-2018   Pieter de Rooij     Copied from the web
-''=======================================================
-Sub WriteToAdobeFields()
-Attribute WriteToAdobeFields.VB_Description = "Writes desired values to specified fields in an open document."
-    Dim AcrobatApplication As Acrobat.CAcroApp
-    Dim AcrobatDocument As Acrobat.CAcroAVDoc
-    Dim fcount As Long
-    Dim sFieldName As String
-    
-    Set AcrobatApplication = CreateObject("AcroExch.App")
-    Set AcrobatDocument = CreateObject("AcroExch.AVDoc")
-    
-    If AcrobatDocument.Open("D:\Zaal\LTV\Toewijzingen formulier.pdf", "") Then
-        AcrobatApplication.Show
-        Set AcroForm = CreateObject("AFormAut.App")
-        Set Fields = AcroForm.Fields
-        fcount = Fields.Count
-        
-        Fields("Name0").Value = "Test"
-        Fields("Name1").Value = "Test2"
-        Fields("Name2").Value = "Test3"
-        Fields("Name3").Value = "Test4"
-    Else
-        MsgBox "Failed to write field!"
-    End If
-    
-    ' Neatly exit
-    AcrobatApplication.Exit
-    Set AcrobatApplication = Nothing
-    Set AcrobatDocument = Nothing
-    Set Field = Nothing
-    Set Fields = Nothing
-    Set AcroForm = Nothing
-    
-End Sub
-
-''=======================================================
 '' Program:     ConvertAssignments
 '' Desc:        Converts a filled 'apply yourself to the field ministry' template to assignments in PDF format.
 '' Called by:   Directly (button)
@@ -279,11 +126,18 @@ Attribute ConvertAssignments.VB_ProcData.VB_Invoke_Func = " \n14"
         ConvertWeek
     Wend
     
+    ' Delete template page
+    
+    ' Ask where to save the result and do so
+    Dim strSaveLoc As String
+    strSaveLoc = AskUser("Sla toewijzingen op", "Save")
+    SaveAdobe (strSaveLoc)
+    
     ' Close Adobe modules again
     CloseAdobe
     
     ' Provide feedback that the operation was succesful
-    MsgBox "Toewijzingen zijn succesvol aangemaakt!"
+    MsgBox "Toewijzingen zijn succesvol aangemaakt en opgeslagen!"
     
 End Sub
 
