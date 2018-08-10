@@ -47,7 +47,7 @@ Sub OpenAdobe(ByVal strTemplLoc As String)
         Set g_jso = gAcrobatPDDoc.GetJSObject
         
         ' Show Acrobat window
-        gAcrobatApplication.Show
+'        gAcrobatApplication.Show
     End If
     
 End Sub
@@ -246,6 +246,7 @@ Sub CloseAdobe()
     
     ' Close application
     gAcrobatApplication.CloseAllDocs
+    gAcrobatApplication.Hide
     gAcrobatApplication.Exit
     Set gAcrobatApplication = Nothing
     

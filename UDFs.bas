@@ -107,18 +107,20 @@ End Sub
 '' Date         Programmer          Change
 '' 13-06-2018   Pieter de Rooij     Formed the stub
 '' 04-08-2018   Pieter de Rooij     Elaborated to demonstrate template spawning
+'' 09-08-2018   Pieter de Rooij     Complete and working version
+'' 10-08-2018   Pieter de Rooij     Fixed template location, delete template page and save result
 ''=======================================================
 Sub ConvertAssignments()
 Attribute ConvertAssignments.VB_Description = "Converts the filled in weeks into assignments."
 Attribute ConvertAssignments.VB_ProcData.VB_Invoke_Func = " \n14"
     
     ' Ask user where the PDF template is located
-    Dim strTemplLoc As String
-    strTemplLoc = AskUser("Kies de template van toewijzingen")
+'    Dim strTemplLoc As String
+'    strTemplLoc = AskUser("Kies de template van toewijzingen")
     
     ' Initialize Adobe modules to edit PDF
     InitializeAdobe
-    OpenAdobe (strTemplLoc)
+    OpenAdobe (ActiveWorkbook.Path & "\Toewijzingen template.pdf")
     
     ' Loop over weeks for as long as there are filled rows
     g_intRow = 1    ' Start with first row
@@ -155,6 +157,7 @@ End Sub
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 03-08-2018   Pieter de Rooij     Initial version
+'' 09-08-2018   Pieter de Rooij     Start in current folder
 ''=======================================================
 Function AskUser(ByVal strTitle As String, Optional ByVal strType As String = "Open", Optional ByVal bMulti As Boolean = False)
     Dim fdDialog As FileDialog  ' Variable holding the dialog
@@ -163,6 +166,9 @@ Function AskUser(ByVal strTitle As String, Optional ByVal strType As String = "O
     If LCase(strType) = "open" Then
         ' Open file dialog
         Set fdDialog = Application.FileDialog(msoFileDialogOpen)    ' Store open dialog
+        ' Filters can only be set for opening
+        fdDialog.Filters.Clear                                      ' Modify file filter
+        Call fdDialog.Filters.Add("PDF", "*.pdf")                   ' Only allow PDF files
     ElseIf LCase(strType) = "save" Then
         ' Save file dialog
         Set fdDialog = Application.FileDialog(msoFileDialogSaveAs)  ' Store save dialog
@@ -172,10 +178,9 @@ Function AskUser(ByVal strTitle As String, Optional ByVal strType As String = "O
     End If
     
     ' Specify dialog and show to user
-    fdDialog.Title = strTitle                   ' Specify window title
-    fdDialog.AllowMultiSelect = bMulti          ' Allow to choose multiple files or not
-    fdDialog.Filters.Clear                      ' Modify file filter
-    Call fdDialog.Filters.Add("PDF", "*.pdf")   ' Only allow PDF files
+    fdDialog.Title = strTitle                                   ' Specify window title
+    fdDialog.AllowMultiSelect = bMulti                          ' Allow to choose multiple files or not
+    fdDialog.InitialFileName = ActiveWorkbook.Path & "\*.pdf"   ' Start in current folder
     
     ' Show dialog
     If fdDialog.Show Then
