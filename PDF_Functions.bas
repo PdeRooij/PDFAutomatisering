@@ -45,9 +45,6 @@ Sub OpenAdobe(ByVal strTemplLoc As String)
         
         ' With the PDDoc, it is now also possible to initialize the JScript bridge
         Set g_jso = gAcrobatPDDoc.GetJSObject
-        
-        ' Show Acrobat window
-'        gAcrobatApplication.Show
     End If
     
 End Sub
@@ -201,6 +198,27 @@ Sub TickType(ByVal strPre As String, ByVal strSuf As String, ByVal strDutchType 
     
     ' Tick field
     g_jso.getField(strPre & strEngType & strSuf).checkThisBox 0, True
+    
+End Sub
+
+''=======================================================
+'' Program:     DeleteTemplate
+'' Desc:        Removes the template page from a PDF document.
+'' Called by:   ConvertAssignments
+'' Call:        DeleteTemplate
+'' Arguments:   None
+'' Comments:    Assumes the last page is the template page and deletes that.
+'' Changes----------------------------------------------
+'' Date         Programmer          Change
+'' 10-08-2018   Pieter de Rooij     Initial version
+''=======================================================
+Sub DeleteTemplate()
+    ' Get last page number (first page is 0)
+    Dim intLastPage As Integer
+    intLastPage = gAcrobatPDDoc.GetNumPages - 1
+    
+    ' Delete that page
+    gAcrobatPDDoc.DeletePages intLastPage, intLastPage
     
 End Sub
 

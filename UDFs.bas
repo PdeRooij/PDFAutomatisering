@@ -129,6 +129,7 @@ Attribute ConvertAssignments.VB_ProcData.VB_Invoke_Func = " \n14"
     Wend
     
     ' Delete template page
+    DeleteTemplate
     
     ' Ask where to save the result and do so
     Dim strSaveLoc As String
