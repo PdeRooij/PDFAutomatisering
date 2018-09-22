@@ -31,13 +31,15 @@ End Sub
 '' Called by:   ConvertAssignments
 '' Call:        OpenAdobe strTemplLoc:=TemplateLocation
 '' Arguments:   TemplateLocation    - String of the template's path
+'' Returns:     True if template is opened successfully, False otherwise.
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 03-08-2018   Pieter de Rooij     Opens PDF template after initialisation
 '' 09-08-2018   Pieter de Rooij     Removed form references
+'' 10-08-2018   Pieter de Rooij     Turned into function and show error if document can't be opened
 ''=======================================================
-Sub OpenAdobe(ByVal strTemplLoc As String)
+Function OpenAdobe(ByVal strTemplLoc As String) As Boolean
     ' Open PDF document
     If gAcrobatAVDoc.Open(strTemplLoc, "Toewijzingen") Then
         ' Succesfully opened
@@ -45,9 +47,16 @@ Sub OpenAdobe(ByVal strTemplLoc As String)
         
         ' With the PDDoc, it is now also possible to initialize the JScript bridge
         Set g_jso = gAcrobatPDDoc.GetJSObject
+        
+        ' Return successful
+        OpenAdobe = True
+    Else
+        ' Couldn't open, display error message and return failure
+        MsgBox "Kan de toewijzingen template niet openen!"
+        OpenAdobe = False
     End If
     
-End Sub
+End Function
 
 ''=======================================================
 '' Program:     SpawnAssignments
@@ -228,6 +237,7 @@ End Sub
 '' Called by:   ConvertAssignments
 '' Call:        SaveAdobe(FileLocation)
 '' Arguments:   FileLocation    - String where the PDF should be saved
+'' Returns:     True if successful, False otherwise
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
@@ -235,10 +245,10 @@ End Sub
 ''=======================================================
 Function SaveAdobe(ByVal strFLoc As String) As Boolean
     ' Try to save to specified file
-    If gAcrobatPDDoc.Save(PDSaveFull, strFLoc) = False Then
-        SaveAdobe = False
-    Else
+    If gAcrobatPDDoc.Save(PDSaveFull, strFLoc) Then
         SaveAdobe = True
+    Else
+        SaveAdobe = False
     End If
     
 End Function

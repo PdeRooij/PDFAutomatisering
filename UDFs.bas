@@ -97,6 +97,46 @@ Problem:
 End Sub
 
 ''=======================================================
+'' Program:     SavePDF
+'' Description: Saves the template as PDF.
+'' Called by:   Directly
+'' Call:        SavePDF()
+'' Arguments:   None
+'' Comments:    None
+'' Changes----------------------------------------------
+'' Date         Programmer          Change
+'' 02-09-2018   Pieter de Rooij     Initial version.
+''=======================================================
+Sub SavePDF()
+'
+' SavePDF Macro
+' Sla LTV schema op als PDF.
+'
+
+'
+    ' Save location is current folder \ LTV {month}
+    Dim SaveLoc As String
+    SaveLoc = ActiveWorkbook.Path & "\LTV " & MonthName(Month(ActiveSheet.Cells(2, 1).Value))     ' Presumes a date is present in A2
+    
+    ' Do the actual saving
+    With ActiveSheet
+        ' Set to fit columns on one page
+        .PageSetup.FitToPagesWide = 1
+        .PageSetup.FitToPagesTall = False
+        
+        ' Export PDF
+        .ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
+            SaveLoc & ".pdf", Quality:=xlQualityStandard, _
+            IncludeDocProperties:=True, IgnorePrintAreas:=False, _
+            OpenAfterPublish:=False
+        
+        ' Notification
+        MsgBox "LTV schema opgeslagen als " & SaveLoc
+    End With
+    
+End Sub
+
+''=======================================================
 '' Program:     ConvertAssignments
 '' Desc:        Converts a filled 'apply yourself to the field ministry' template to assignments in PDF format.
 '' Called by:   Directly (button)
@@ -154,13 +194,14 @@ End Sub
 '' Arguments:   Title       - Window title as string.
 ''              Type        - Dialog type as string. Can be "save" or "open".
 ''              Multiple    - Boolean indicating whether or not the user is allowed to select multiple files.
+'' Returns:     String of selected file path.
 '' Comments:    None
 '' Changes----------------------------------------------
 '' Date         Programmer          Change
 '' 03-08-2018   Pieter de Rooij     Initial version
 '' 09-08-2018   Pieter de Rooij     Start in current folder
 ''=======================================================
-Function AskUser(ByVal strTitle As String, Optional ByVal strType As String = "Open", Optional ByVal bMulti As Boolean = False)
+Function AskUser(ByVal strTitle As String, Optional ByVal strType As String = "Open", Optional ByVal bMulti As Boolean = False) As String
     Dim fdDialog As FileDialog  ' Variable holding the dialog
     
     ' Prepare the dialog
